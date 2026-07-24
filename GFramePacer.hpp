@@ -5,8 +5,6 @@
 #else
         #include <sys/mman.h>
         #include <sched.h>
-        #include <sys/syscall.h>
-        #include <unistd.h>
         #include <sys/resource.h>
 #endif
 
@@ -26,11 +24,7 @@ class GFramePacer { private: std::chrono::time_point<std::chrono::steady_clock> 
                 {
                         mlockall(MCL_CURRENT | MCL_FUTURE);  // Lock all virtual memory pages to RAM (no disk swapping)
 
-                        // Set realtime process scheduling + max priority
-                        sched_attr attr = {0}; attr.size = sizeof(sched_attr);
-                        attr.sched_policy = SCHED_FIFO;
-                        attr.sched_priority = sched_get_priority_max(SCHED_FIFO);
-                        if (!syscall(SYS_sched_setattr, 0, &attr, 0)) setpriority(PRIO_PROCESS, 0, -20);
+                        setpriority(PRIO_PROCESS, 0, -20);
 
                         // Set to stay on same CPU core (unless core 0|1 (same physical core on SMT CPU), then falls back to 2)
                         int core = sched_getcpu();
