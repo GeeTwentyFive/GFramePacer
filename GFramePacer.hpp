@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _GFRAMEPACER_H
+#define _GFRAMEPACER_H
 
 #ifdef _WIN32
         #include <windows.h>
@@ -11,8 +12,6 @@
 #include <chrono>
 
 class GFramePacer { private: std::chrono::time_point<std::chrono::steady_clock> _previous_time; public:
-        double target_frametime_ms = 1.0;  // Should be a power-of-2 (like 1.0, 2.0, 4.0, 8.0) (to align as fraction/multiple of USB input report rate)
-
         GFramePacer() {
                 _previous_time = std::chrono::steady_clock::now();
 
@@ -36,7 +35,7 @@ class GFramePacer { private: std::chrono::time_point<std::chrono::steady_clock> 
                 #endif
         }
 
-        double Wait() {
+        double Wait(double target_frametime_ms = 1.0) {  // `target_frametime_ms` hould be a power-of-2 (like 1.0, 2.0, 4.0, 8.0) (to align as fraction/multiple of USB input report rate)
                 while (std::chrono::steady_clock::now() < _previous_time+std::chrono::duration<double, std::milli>(target_frametime_ms)) {}  // busy-loop instead of sleep due to OS sleep being imprecise (especially on Windows) and causing context switching stutter
                 auto new_time = std::chrono::steady_clock::now();
                 double delta_time = std::chrono::duration<double>(new_time - _previous_time).count();
@@ -44,3 +43,5 @@ class GFramePacer { private: std::chrono::time_point<std::chrono::steady_clock> 
                 return delta_time;
         }
 };
+
+#endif // _GFRAMEPACER_H
